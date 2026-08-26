@@ -101,7 +101,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/li2282231/RustDesk-VPS-OneCl
 
 ## 配置 RustDesk 客户端
 
-安装结束会显示 `ID Server` 和 `Key`。也可以随时在 VPS 中运行查看：
+安装结束会显示 `ID Server` 和 `Key`，也可以随时在 VPS 中运行查看：
 
 ```bash
 rustdesk-status
