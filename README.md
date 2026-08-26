@@ -184,7 +184,7 @@ apt-get upgrade
 rustdesk-uninstall
 ```
 
-这不是普通的“只删 RustDesk”操作。执行后将永久删除：
+执行后将永久删除：
 
 - RustDesk Server、数据库、密钥和配置；
 - Docker Engine、Docker Compose、containerd；
@@ -193,12 +193,12 @@ rustdesk-uninstall
 - 本脚本新增的 UFW 端口规则；
 - 安装器记录的本次安装新增依赖。
 
-以“尽量恢复到安装前的干净状态”为设计目标。安装器会在安装前后比较系统软件包，并记录本次新增项目，卸载时只针对这些新增依赖和明确的 Docker 软件包进行清理。
+本脚本以“尽量恢复到安装前的干净状态”为设计目标，安装器会在安装前后比较系统软件包，并记录本次新增项目，卸载时只针对这些新增依赖和明确的 Docker 软件包进行清理。
 
-卸载前脚本会列出检测到的非 RustDesk 容器。如果安装 RustDesk 之前已经存在 Docker，也会额外提示。只有准确输入 `REMOVE-ALL` 才会继续，其他任何输入都会取消。
+卸载前脚本会列出检测到的非 RustDesk 容器，如果安装 RustDesk 之前已经存在 Docker，也会额外提示；只有准确输入 `REMOVE-ALL` 才会继续，其他任何输入都会取消。
 
 > [!CAUTION]
-> 完整卸载不会创建备份。如果其他网站、数据库、面板或应用也在使用 Docker，它们会一起停止，相关 Docker 数据也会永久删除。只有确认这台 VPS 的 Docker 专供 RustDesk 使用时才能继续。
+> 完整卸载不会创建备份，如果其他网站、数据库、面板或应用也在使用 Docker，它们会一起停止，相关 Docker 数据也会永久删除！只有确认这台 VPS 的 Docker 专供 RustDesk 使用时才能继续。
 
 VPS 服务商控制台中的安全组/云防火墙不属于系统内部配置，脚本无法替你删除；完整卸载后需要回到服务商控制台手动撤销此前放行的 RustDesk 端口。
 
