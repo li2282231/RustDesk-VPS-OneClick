@@ -111,9 +111,9 @@ rustdesk-status
 
 | 客户端项目 | 填写内容 |
 |---|---|
-| ID Server | 安装时输入的域名或公网 IP |
-| Relay Server | 留空 |
-| API Server | 留空；OSS 版本不需要 |
+| ID服务器 | 安装时输入的域名或公网 IP |
+| 中继服务器 | 留空 |
+| API服务器 | 留空；OSS 版本不需要 |
 | Key | `rustdesk-status` 显示的公钥 |
 
 所有需要通过自建服务器互联的 RustDesk 客户端，都应使用相同的 ID Server 和 Key。
