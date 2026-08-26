@@ -13,9 +13,6 @@
 
 </div>
 
-> [!IMPORTANT]
-> 发布仓库前，请把本文所有 `YOUR_GITHUB_USERNAME` 替换成你自己的 GitHub 用户名。推荐仓库名保持为 `RustDesk-VPS-OneClick`，这样其余网址无需修改。
-
 ## 目录
 
 - [RustDesk 是什么](#rustdesk-是什么)
@@ -95,7 +92,7 @@ sudo -i
 执行一键安装：
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/RustDesk-VPS-OneClick/main/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/li2282231/RustDesk-VPS-OneClick/main/install.sh)
 ```
 
 安装时会依次询问：
@@ -109,7 +106,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/RustDes
 远程脚本会以 root 权限安装软件。正式使用前，建议先下载并查看内容：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/RustDesk-VPS-OneClick/main/install.sh -o install.sh
+curl -fsSL https://raw.githubusercontent.com/li2282231/RustDesk-VPS-OneClick/main/install.sh -o install.sh
 less install.sh
 sudo bash install.sh
 ```
@@ -230,8 +227,7 @@ VPS 服务商控制台中的安全组/云防火墙不属于系统内部配置，
 4. 不要勾选自动创建 README、`.gitignore` 或 License；
 5. 创建仓库后，点击 **Add file → Upload files**；
 6. 把本项目文件拖到上传区，提交说明填写 `Initial release v1.6.1`；
-7. 打开 GitHub 上的 `README.md`，点击铅笔按钮，把 `YOUR_GITHUB_USERNAME` 全部换成你的用户名；
-8. 再打开 Raw 安装网址，确认页面显示的是脚本文本，而不是 `404`。
+7. 再打开 Raw 安装网址，确认页面显示的是脚本文本，而不是 `404`。
 
 ### 方法 B：VS Code，适合长期维护
 
@@ -264,7 +260,7 @@ GitHub 官方也支持直接在网页中上传文件；网页单文件上传限�
 固定版本安装命令示例：
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/RustDesk-VPS-OneClick/v1.6.1/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/li2282231/RustDesk-VPS-OneClick/v1.6.1/install.sh)
 ```
 
 ## 常见问题
