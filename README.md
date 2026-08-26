@@ -98,7 +98,6 @@ bash <(curl -fsSL https://raw.githubusercontent.com/li2282231/RustDesk-VPS-OneCl
 1. 选择稳定版或滚动版 `latest`，新手直接按回车选稳定版；
 2. 输入 RustDesk 域名或 VPS 公网 IPv4；
 3. 等待 Docker 和 RustDesk Server 部署完成。
-```
 
 ## 配置 RustDesk 客户端
 
