@@ -2,14 +2,14 @@
 
 # 🖥️ RustDesk VPS OneClick
 
-**在 Ubuntu / Debian VPS 上一键部署 RustDesk Server OSS**
+**在 Ubuntu / Debian 系统的VPS 上一键部署 RustDesk Server OSS**
 
 ![Version](https://img.shields.io/badge/version-1.6.1-2563eb?style=flat-square)
 ![Ubuntu](https://img.shields.io/badge/Ubuntu-22.04%20%7C%2024.04%20%7C%2026.04-E95420?style=flat-square&logo=ubuntu&logoColor=white)
 ![Debian](https://img.shields.io/badge/Debian-11%20%7C%2012%20%7C%2013-A81D33?style=flat-square&logo=debian&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)
 
-简单、可重复、方便维护。自动安装 Docker，部署 `hbbs` / `hbbr`，持久保存密钥，并提供状态、升级、重启、日志和完整卸载命令。
+✅简单、✅方便、✅可维护。自动安装RustDesk所需的所有依赖，包括 Docker/ `hbbs` / `hbbr`，持久保存密钥，并提供状态、升级、重启、日志和完整卸载命令。
 
 </div>
 
@@ -24,8 +24,6 @@
 - [管理命令](#管理命令)
 - [升级与维护](#升级与维护)
 - [完整卸载](#完整卸载)
-- [上传到 GitHub](#上传到-github)
-- [以后如何维护仓库](#以后如何维护仓库)
 - [常见问题](#常见问题)
 
 ## RustDesk 是什么
@@ -202,7 +200,7 @@ rustdesk-uninstall
 - 本脚本新增的 UFW 端口规则；
 - 安装器记录的本次安装新增依赖。
 
-“尽量恢复到安装前的干净状态”以 **全新 VPS 首次使用 v1.6.1 安装** 为设计目标。安装器会在安装前后比较系统软件包，并记录本次新增项目，卸载时只针对这些新增依赖和明确的 Docker 软件包进行清理。
+以“尽量恢复到安装前的干净状态”为设计目标。安装器会在安装前后比较系统软件包，并记录本次新增项目，卸载时只针对这些新增依赖和明确的 Docker 软件包进行清理。
 
 卸载前脚本会列出检测到的非 RustDesk 容器。如果安装 RustDesk 之前已经存在 Docker，也会额外提示。只有准确输入 `REMOVE-ALL` 才会继续，其他任何输入都会取消。
 
@@ -210,58 +208,6 @@ rustdesk-uninstall
 > 完整卸载不会创建备份。如果其他网站、数据库、面板或应用也在使用 Docker，它们会一起停止，相关 Docker 数据也会永久删除。只有确认这台 VPS 的 Docker 专供 RustDesk 使用时才能继续。
 
 VPS 服务商控制台中的安全组/云防火墙不属于系统内部配置，脚本无法替你删除；完整卸载后需要回到服务商控制台手动撤销此前放行的 RustDesk 端口。
-
-## 上传到 GitHub
-
-### 哪种方式更简单？
-
-- **第一次上传：GitHub 网页版更简单。** 本项目文件少，拖入网页即可；
-- **以后经常更新：VS Code 更方便。** 可以同时编辑脚本和 README、查看修改记录，再一次提交；
-- 如果不熟悉 Git 命令，不必使用终端。VS Code 的“源代码管理”界面已经足够。
-
-### 方法 A：GitHub 网页版，适合第一次上传
-
-1. 登录 GitHub，点击右上角 `+` → **New repository**；
-2. 仓库名填写 `RustDesk-VPS-OneClick`；
-3. 选择 `Public`；只有公开仓库的 Raw 地址才能让未登录的 VPS 直接下载；
-4. 不要勾选自动创建 README、`.gitignore` 或 License；
-5. 创建仓库后，点击 **Add file → Upload files**；
-6. 把本项目文件拖到上传区，提交说明填写 `Initial release v1.6.1`；
-7. 再打开 Raw 安装网址，确认页面显示的是脚本文本，而不是 `404`。
-
-### 方法 B：VS Code，适合长期维护
-
-1. 在 VS Code 中打开整个 `RustDesk-VPS-OneClick` 文件夹；
-2. 点击左侧 **源代码管理** 图标；
-3. 选择 **初始化存储库**；
-4. 暂存全部文件，提交信息填写 `Initial release v1.6.1`；
-5. 点击 **发布到 GitHub**，登录账号并选择公开仓库；
-6. 以后修改后，在源代码管理中填写本次修改说明，再点提交和同步即可。
-
-GitHub 官方也支持直接在网页中上传文件；网页单文件上传限制为 25 MiB，本项目远小于该限制。
-
-## 以后如何维护仓库
-
-建议采用“小版本、先测试、再发布”的方式：
-
-1. 修改 `install.sh` 顶部的 `SCRIPT_VERSION`，例如 `1.6.1` → `1.6.2`；
-2. 同步修改 README 顶部版本徽章；
-3. 在 `CHANGELOG.md` 顶部写清楚改了什么；
-4. 检查语法：`bash -n install.sh`；
-5. 提交到 GitHub 后，确认仓库的 **Actions** 页面显示绿色通过；
-6. 先在临时 VPS 上全新安装，再在已有 VPS 上测试重复安装与升级；
-7. 测试通过后，在 GitHub 的 **Releases** 页面创建同名版本，例如 `v1.6.1`。
-
-### `main` 与版本标签的区别
-
-- `main` 始终指向最新脚本，适合自己随时获取新版；
-- `v1.6.1` 这样的标签内容固定，更适合稳定环境和故障排查。
-
-固定版本安装命令示例：
-
-```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/li2282231/RustDesk-VPS-OneClick/v1.6.1/install.sh)
-```
 
 ## 常见问题
 
@@ -275,17 +221,13 @@ bash <(curl -fsSL https://raw.githubusercontent.com/li2282231/RustDesk-VPS-OneCl
 4. 客户端的 ID Server 与 Key 是否完全一致；
 5. 用 `rustdesk-logs` 查看是否有报错。
 
-### 为什么输入了域名，却没有 HTTPS 证书？
+### 是否需要 HTTPS 证书？
 
-RustDesk OSS 的核心连接使用自己的端口和协议，不是普通网站。本脚本会把域名配置为 ID / Relay 服务地址，但不会安装网站、反向代理或 TLS 证书。
+RustDesk OSS 的核心连接使用自己的端口和协议，不是普通网站，故不需要 TLS 证书。
 
 ### 卸载会删除 Docker 吗？
 
-会。`rustdesk-uninstall` 的用途是让一台只为 RustDesk 安装 Docker 的干净 VPS 尽量恢复到安装前状态，因此会删除 Docker 及全部 Docker 数据。执行前会显示高风险提示、列出其他容器，并要求输入 `REMOVE-ALL` 明确确认。
-
-### 可以从旧版 v1.5.4 直接运行新版吗？
-
-可以。新版继续使用 `/opt/rustdesk/data`，重新运行安装器时会保留原有 Key。新版不会自动创建备份。但旧版没有记录安装前的软件包状态，因此从 v1.5.4 升级的 VPS 在完整卸载后，可能仍留下少量无法安全判断来源的系统依赖；精准清理由 v1.6.1 全新安装开始生效。
+会，`rustdesk-uninstall` 的用途是让一台只为 RustDesk 安装 Docker 的干净 VPS 尽量恢复到安装前状态，因此会删除 Docker 及全部 Docker 数据。执行前会显示高风险提示、列出其他容器，并要求输入 `REMOVE-ALL` 明确确认。
 
 ## 参考资料与声明
 
