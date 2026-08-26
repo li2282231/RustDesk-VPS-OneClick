@@ -101,7 +101,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/li2282231/RustDesk-VPS-OneCl
 
 ## 配置 RustDesk 客户端
 
-安装结束会显示 `ID Server` 和 `Key`，也可以随时在 VPS 中运行查看：
+安装结束会显示 `ID Server` 和 `Key`，也可以随时在 VPS 中运行下面这条命令查看：
 
 ```bash
 rustdesk-status
@@ -125,7 +125,7 @@ rustdesk-status
 | 命令 | 作用 |
 |---|---|
 | `rustdesk-help` | 显示管理命令帮助 |
-| `rustdesk-status` | 查看 Docker、容器、端口、ID Server 和 Key |
+| `rustdesk-status` | 查看 Docker、容器、端口、ID服务器 和 Key |
 | `rustdesk-update` | 检测并更新 RustDesk Server 镜像 |
 | `rustdesk-restart` | 重启 `hbbs` / `hbbr` |
 | `rustdesk-logs` | 实时查看最近 200 行日志，按 `Ctrl+C` 退出 |
@@ -137,7 +137,7 @@ rustdesk-status
 |---|---|
 | `/opt/rustdesk/docker-compose.yml` | Docker Compose 配置 |
 | `/opt/rustdesk/data/` | 数据库与密钥，最重要 |
-| `/opt/rustdesk/domain.txt` | ID Server 地址 |
+| `/opt/rustdesk/domain.txt` | ID服务器 地址 |
 | `/opt/rustdesk/installer-packages.txt` | 本次安装新增的软件包记录 |
 
 ## 升级与维护
@@ -208,7 +208,7 @@ VPS 服务商控制台中的安全组/云防火墙不属于系统内部配置，
 1. `rustdesk-status` 中两个容器是否为运行状态；
 2. 21115-21119/TCP 与 21116/UDP 是否已在 VPS 安全组放行；
 3. 域名是否解析到当前 VPS 的公网 IP；
-4. 客户端的 ID Server 与 Key 是否完全一致；
+4. 所有客户端的 ID服务器 与 Key 是否完全一致；
 5. 用 `rustdesk-logs` 查看是否有报错。
 
 ### 是否需要 HTTPS 证书？
