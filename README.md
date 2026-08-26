@@ -9,7 +9,7 @@
 ![Debian](https://img.shields.io/badge/Debian-11%20%7C%2012%20%7C%2013-A81D33?style=flat-square&logo=debian&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)
 
-✅简单、✅方便、✅可维护。自动安装RustDesk所需的所有依赖，包括 Docker/ `hbbs` / `hbbr`，持久保存密钥，并提供状态、升级、重启、日志和完整卸载命令。
+✅简单、✅方便、✅可维护。自动安装RustDesk所需的所有依赖，包括 `Docker`/ `hbbs` / `hbbr`，持久保存密钥，并提供状态、升级、重启、日志和完整卸载命令。
 
 </div>
 
@@ -41,8 +41,8 @@
 
 - 自动识别 Ubuntu 或 Debian，并使用对应的 Docker 官方软件源；
 - 可选择稳定版本或滚动版 `latest`；
-- 域名和公网 IPv4 均可使用；
-- 自动部署 `hbbs` / `hbbr`，服务器重启后自动恢复；
+- 域名和公网 IPv4 均可使用【✅推荐使用域名部署】；
+- 自动部署 `hbbs` / `hbbr`，服务器重启后自动恢复运行；
 - 重复安装或升级时保留数据库和 Key；
 - 自动添加 UFW 端口规则，但不会擅自启用 UFW；
 - 记录首次安装时新增的软件包，便于卸载时一并清理；
@@ -98,15 +98,6 @@ bash <(curl -fsSL https://raw.githubusercontent.com/li2282231/RustDesk-VPS-OneCl
 1. 选择稳定版或滚动版 `latest`，新手直接按回车选稳定版；
 2. 输入 RustDesk 域名或 VPS 公网 IPv4；
 3. 等待 Docker 和 RustDesk Server 部署完成。
-
-### 更稳妥的运行方式
-
-远程脚本会以 root 权限安装软件。正式使用前，建议先下载并查看内容：
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/li2282231/RustDesk-VPS-OneClick/main/install.sh -o install.sh
-less install.sh
-sudo bash install.sh
 ```
 
 ## 配置 RustDesk 客户端
