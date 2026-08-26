@@ -118,7 +118,8 @@ rustdesk-status
 | API服务器 | 留空；OSS 版本不需要 |
 | Key | `rustdesk-status` 显示的公钥 |
 
-所有需要通过自建服务器互联的 RustDesk 客户端，都必须使用相同的 ID服务器 和 Key。
+> [!NOTE]
+> 所有需要通过自建服务器互联的 RustDesk 客户端，都必须使用相同的 ID服务器 和 Key。
 
 ## 管理命令
 
