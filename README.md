@@ -28,7 +28,7 @@
 
 ## RustDesk 是什么
 
-[RustDesk](https://rustdesk.com/) 是一款开源远程桌面软件，可作为 TeamViewer、AnyDesk 等工具的替代方案。自行部署 RustDesk Server 后，设备注册与中继流量可经过自己的 VPS，便于掌控服务地址、密钥和运行数据。
+[RustDesk](https://rustdesk.com/) 是一款开源远程桌面软件，可作为 TeamViewer、AnyDesk、ToDesk、UU远程 等工具的替代方案。自行部署 RustDesk Server 后，设备注册与中继流量可经过自己的 VPS，便于掌控服务地址、密钥和运行数据。
 
 本项目部署的是免费的 **RustDesk Server OSS**：
 
@@ -42,6 +42,8 @@
 - 自动识别 Ubuntu 或 Debian，并使用对应的 Docker 官方软件源；
 - 可选择稳定版本或滚动版 `latest`；
 - 域名和公网 IPv4 均可使用【✅推荐使用域名部署】；
+- 优先采用直连，如过你有公网IP，体验会非常不错👍；
+- 如果无法直连，可选择中继连接，为了获得更低延迟，建议部署在离你位置最近的公共VPS上；
 - 自动部署 `hbbs` / `hbbr`，服务器重启后自动恢复运行；
 - 重复安装或升级时保留数据库和 Key；
 - 自动添加 UFW 端口规则，但不会擅自启用 UFW；
