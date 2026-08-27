@@ -217,6 +217,47 @@ VPS 服务商控制台中的安全组/云防火墙不属于系统内部配置，
 > [!IMPORTANT]
 > ❗️❗️❗️如果你有使用Surge/Clash等代理工具，且开启TUN模式（例如：Surge For Mac开启增强模式），请务必将你的VPS IP地址、控制端设备与被控端设备的公网IP段（如果有）、路由器内网IP段、及其它内网IP段绕过TUN模式代理，否则无法直连；系统代理模式不受影响。
 
+
+#### Surge for Mac 模块示例
+
+将下面内容保存为 `RustDesk.sgmodule`，再导入 Surge for Mac：
+
+```ini
+#!name=RustDesk 局域网与家庭电脑直连
+#!desc=让 RustDesk 服务器、常见内网及家庭公网网段绕过 Surge 系统代理与增强模式
+#!system=mac
+
+[General]
+always-real-ip = %APPEND% rustdesk.443495.xyz
+tun-excluded-routes = %APPEND% 45.145.74.157/32, 60.221.130.0/24, 10.0.0.0/8, 100.64.0.0/10, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16, fc00::/7, fe80::/10
+skip-proxy = %APPEND% rustdesk.443495.xyz, 45.145.74.157, 60.221.130.0/24, 10.0.0.0/8, 100.64.0.0/10, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16
+```
+
+#### Windows Clash（Mihomo / Clash Meta 内核）示例
+
+将下面内容合并到现有配置的 `dns` 与 `tun` 部分；如果已经存在同名部分，只添加其中的字段，不要重复创建：
+
+```yaml
+dns:
+  fake-ip-filter:
+    - "rustdesk.443495.xyz"
+
+tun:
+  route-exclude-address:
+    - 45.145.74.157/32
+    - 60.221.130.0/24
+    - 10.0.0.0/8
+    - 100.64.0.0/10
+    - 172.16.0.0/12
+    - 192.168.0.0/16
+    - 169.254.0.0/16
+    - fc00::/7
+    - fe80::/10
+```
+
+> [!NOTE]
+> 上述域名、VPS 公网 IP 和家庭公网网段只是配置示例，请按自己的实际地址修改。Windows 示例适用于使用 Mihomo / Clash Meta 内核并支持 `route-exclude-address` 的客户端；修改后请重新加载配置或重启内核。域名解析地址发生变化时，也要同步更新对应的公网 IP 或网段。
+
 ### 是否需要 HTTPS 证书？
 
 RustDesk OSS 的核心连接使用自己的端口和协议，不是普通网站，故不需要 TLS 证书。
