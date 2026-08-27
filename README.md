@@ -197,7 +197,7 @@ rustdesk-uninstall
 
 卸载前脚本会列出检测到的非 RustDesk 容器，如果安装 RustDesk 之前已经存在 Docker，也会额外提示；只有准确输入 `REMOVE-ALL` 才会继续，其他任何输入都会取消。
 
-> [!CAUTION]
+> [!WARNING]
 > 完整卸载不会创建备份，如果其他网站、数据库、面板或应用也在使用 Docker，它们会一起停止，相关 Docker 数据也会永久删除！只有确认这台 VPS 的 Docker 专供 RustDesk 使用时才能继续。
 
 VPS 服务商控制台中的安全组/云防火墙不属于系统内部配置，脚本无法替你删除；完整卸载后需要回到服务商控制台手动撤销此前放行的 RustDesk 端口。
@@ -213,6 +213,9 @@ VPS 服务商控制台中的安全组/云防火墙不属于系统内部配置，
 3. 域名是否解析到当前 VPS 的公网 IP；
 4. 所有客户端的 ID服务器 与 Key 是否完全一致；
 5. 用 `rustdesk-logs` 查看是否有报错。
+
+> [!IMPORTANT]
+> ❗️如果你有使用Surge/Clash等代理工具，且开启TUN模式（例如：Surge For Mac开启增强模式），请务必将控制端与被控端公网IP段（如果有）、路由器内网IP段、及其它内网IP段绕过TUN模式代理，否则无法直连。
 
 ### 是否需要 HTTPS 证书？
 
