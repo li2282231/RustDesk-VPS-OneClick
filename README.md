@@ -113,7 +113,7 @@ rustdesk-status
 
 | 客户端项目 | 填写内容 |
 |---|---|
-| ID服务器 | 安装时输入的域名或公网 IP |
+| ID服务器 | 安装时输入的域名或VPS IP |
 | 中继服务器 | 可留空 |
 | API服务器 | 留空；OSS 版本不需要 |
 | Key | `rustdesk-status` 显示的公钥 |
