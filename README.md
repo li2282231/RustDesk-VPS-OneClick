@@ -133,7 +133,6 @@ rustdesk-status
 | `rustdesk-update` | 检测并更新 RustDesk Server 镜像 |
 | `rustdesk-restart` | 重启 `hbbs` / `hbbr` |
 | `rustdesk-logs` | 实时查看最近 200 行日志，按 `Ctrl+C` 退出 |
-| `/opt/rustdesk/image-source.txt` | 当前使用的官方镜像来源 |
 | `rustdesk-uninstall` | 完整删除 RustDesk、Docker、Docker 数据和相关依赖 |
 
 主要文件位置：
@@ -144,6 +143,7 @@ rustdesk-status
 | `/opt/rustdesk/data/` | 数据库与密钥，最重要 |
 | `/opt/rustdesk/domain.txt` | ID服务器 地址 |
 | `/opt/rustdesk/installer-packages.txt` | 本次安装新增的软件包记录 |
+| `/opt/rustdesk/image-source.txt` | 当前使用的官方镜像来源 |
 
 ## 升级与维护
 
