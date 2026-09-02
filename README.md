@@ -4,7 +4,7 @@
 
 **在 Ubuntu / Debian 系统的VPS 上一键部署 RustDesk Server OSS**
 
-![Version](https://img.shields.io/badge/version-1.6.2-2563eb?style=flat-square)
+![Version](https://img.shields.io/badge/version-1.6.3-2563eb?style=flat-square)
 ![Ubuntu](https://img.shields.io/badge/Ubuntu-22.04%20%7C%2024.04%20%7C%2026.04-E95420?style=flat-square&logo=ubuntu&logoColor=white)
 ![Debian](https://img.shields.io/badge/Debian-11%20%7C%2012%20%7C%2013-A81D33?style=flat-square&logo=debian&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)
