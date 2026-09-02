@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
-# RustDesk VPS OneClick v1.6.1
+# RustDesk VPS OneClick v1.6.2
 # Supports officially maintained Ubuntu and Debian releases.
 
 set -Eeuo pipefail
 
-readonly SCRIPT_VERSION="1.6.1"
+readonly SCRIPT_VERSION="1.6.2"
 readonly INSTALL_DIR="/opt/rustdesk"
 readonly DATA_DIR="${INSTALL_DIR}/data"
 readonly COMPOSE_FILE="${INSTALL_DIR}/docker-compose.yml"
-readonly DOCKER_IMAGE="rustdesk/rustdesk-server"
+readonly PRIMARY_DOCKER_IMAGE="ghcr.io/rustdesk/rustdesk-server"
+readonly FALLBACK_DOCKER_IMAGE="rustdesk/rustdesk-server"
+DOCKER_IMAGE=""
 
 PACKAGE_TRACKING_ACTIVE="0"
 
@@ -128,7 +130,7 @@ configure_docker_repository() {
     local repo_codename="${OS_CODENAME}"
 
     install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL --retry 3 --connect-timeout 15 \
+    curl -4 -fsSL --retry 3 --connect-timeout 15 \
         "https://download.docker.com/linux/${OS_ID}/gpg" \
         -o /etc/apt/keyrings/docker.asc
     chmod a+r /etc/apt/keyrings/docker.asc
@@ -166,20 +168,41 @@ install_docker() {
     docker compose version >/dev/null 2>&1 || fail "Docker Compose 插件不可用。"
 }
 
+select_docker_image() {
+    local candidate
+    local -a candidates=(
+        "${PRIMARY_DOCKER_IMAGE}"
+        "${FALLBACK_DOCKER_IMAGE}"
+    )
+
+    for candidate in "${candidates[@]}"; do
+        printf '正在尝试官方镜像：%s:%s\n' "${candidate}" "${RUSTDESK_TAG}"
+        if docker pull "${candidate}:${RUSTDESK_TAG}"; then
+            DOCKER_IMAGE="${candidate}"
+            success "镜像拉取成功：${DOCKER_IMAGE}:${RUSTDESK_TAG}"
+            return 0
+        fi
+        warn "无法从 ${candidate} 拉取镜像，将尝试下一个官方来源。"
+    done
+
+    fail "GHCR 与 Docker Hub 均无法拉取 RustDesk 镜像。请检查 VPS 的出站网络、DNS 和 TCP 443。"
+}
+
 fetch_latest_stable() {
     local response latest
-    response="$(curl -fsSL --retry 3 --connect-timeout 15 \
-        'https://registry.hub.docker.com/v2/repositories/rustdesk/rustdesk-server/tags?page_size=100')" || return 1
+    response="$(curl -4 -fsSL --retry 3 --retry-delay 2 \
+        --connect-timeout 15 --max-time 60 \
+        -H 'Accept: application/vnd.github+json' \
+        'https://api.github.com/repos/rustdesk/rustdesk-server/releases/latest')" || return 1
 
     latest="$(
         printf '%s' "${response}" \
-            | grep -oE '"name"[[:space:]]*:[[:space:]]*"[0-9]+\.[0-9]+\.[0-9]+"' \
-            | sed -E 's/.*"([0-9]+\.[0-9]+\.[0-9]+)"/\1/' \
-            | sort -V \
-            | tail -n 1
+            | grep -oE '"tag_name"[[:space:]]*:[[:space:]]*"v?[^"]+"' \
+            | head -n 1 \
+            | sed -E 's/^.*:[[:space:]]*"v?([^"]+)".*$/\1/'
     )" || true
 
-    [[ -n "${latest}" ]] || return 1
+    [[ "${latest}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+)?$ ]] || return 1
     printf '%s' "${latest}"
 }
 
@@ -189,7 +212,7 @@ choose_rustdesk_version() {
     if latest_stable="$(fetch_latest_stable)"; then
         printf '最新稳定版：%s\n' "${latest_stable}"
     else
-        warn "暂时无法从 Docker Hub 获取稳定版号，可选择滚动版 latest。"
+        warn "暂时无法从 GitHub Releases 获取稳定版号，可选择滚动版 latest。"
     fi
 
     printf '1) 稳定版（推荐）\n'
@@ -254,10 +277,10 @@ services:
 EOF
 
     docker compose -f "${candidate}" config >/dev/null
-    docker compose -f "${candidate}" pull
     mv "${candidate}" "${COMPOSE_FILE}"
     printf '%s\n' "${SERVER_ADDRESS}" >"${INSTALL_DIR}/domain.txt"
     printf '%s\n' "${RUSTDESK_CHANNEL}" >"${INSTALL_DIR}/channel.txt"
+    printf '%s\n' "${DOCKER_IMAGE}" >"${INSTALL_DIR}/image-source.txt"
     printf '%s\n' "${SCRIPT_VERSION}" >"${INSTALL_DIR}/installer-version.txt"
 }
 
@@ -327,10 +350,16 @@ set -Eeuo pipefail
 
 readonly install_dir="/opt/rustdesk"
 readonly compose_file="${install_dir}/docker-compose.yml"
+readonly primary_image="ghcr.io/rustdesk/rustdesk-server"
+readonly fallback_image="rustdesk/rustdesk-server"
 
 fail() {
     printf '[失败] %s\n' "$1" >&2
     exit 1
+}
+
+warn() {
+    printf '[注意] %s\n' "$1" >&2
 }
 
 prompt() {
@@ -343,30 +372,52 @@ prompt() {
 
 fetch_latest_stable() {
     local response latest
-    response="$(curl -fsSL --retry 3 --connect-timeout 15 \
-        'https://registry.hub.docker.com/v2/repositories/rustdesk/rustdesk-server/tags?page_size=100')" || return 1
+    response="$(curl -4 -fsSL --retry 3 --retry-delay 2 \
+        --connect-timeout 15 --max-time 60 \
+        -H 'Accept: application/vnd.github+json' \
+        'https://api.github.com/repos/rustdesk/rustdesk-server/releases/latest')" || return 1
+
     latest="$(
         printf '%s' "${response}" \
-            | grep -oE '"name"[[:space:]]*:[[:space:]]*"[0-9]+\.[0-9]+\.[0-9]+"' \
-            | sed -E 's/.*"([0-9]+\.[0-9]+\.[0-9]+)"/\1/' \
-            | sort -V \
-            | tail -n 1
+            | grep -oE '"tag_name"[[:space:]]*:[[:space:]]*"v?[^"]+"' \
+            | head -n 1 \
+            | sed -E 's/^.*:[[:space:]]*"v?([^"]+)".*$/\1/'
     )" || true
-    [[ -n "${latest}" ]] || return 1
+
+    [[ "${latest}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+)?$ ]] || return 1
     printf '%s' "${latest}"
+}
+
+select_image_source() {
+    local candidate
+    for candidate in "${primary_image}" "${fallback_image}"; do
+        printf '正在尝试官方镜像：%s:%s\n' "${candidate}" "${target}"
+        if docker pull "${candidate}:${target}"; then
+            selected_image="${candidate}"
+            printf '镜像拉取成功：%s:%s\n' "${selected_image}" "${target}"
+            return 0
+        fi
+        warn "无法从 ${candidate} 拉取镜像，将尝试下一个官方来源。"
+    done
+    fail "GHCR 与 Docker Hub 均无法拉取 RustDesk 镜像，原配置未修改。"
 }
 
 [[ "${EUID}" -eq 0 ]] || fail "请使用 root 运行。"
 [[ -f "${compose_file}" ]] || fail "找不到 RustDesk 配置。"
 
 channel="$(cat "${install_dir}/channel.txt" 2>/dev/null || printf 'stable')"
-current="$(sed -nE 's/.*rustdesk\/rustdesk-server:([^[:space:]]+).*/\1/p' "${compose_file}" | head -n 1)"
+current_ref="$(sed -nE 's/^[[:space:]]*image:[[:space:]]*([^[:space:]]+).*$/\1/p' "${compose_file}" | head -n 1)"
+[[ -n "${current_ref}" ]] || fail "无法从 Docker Compose 配置读取当前镜像。"
+current_image="${current_ref%:*}"
+current="${current_ref##*:}"
 target="${current}"
+selected_image="${current_image}"
 
 if [[ "${channel}" == "latest" ]]; then
+    target="latest"
     printf '当前使用滚动版 latest，将拉取最新镜像。\n'
 else
-    target="$(fetch_latest_stable)" || fail "无法取得最新稳定版号，请稍后再试。"
+    target="$(fetch_latest_stable)" || fail "无法从 GitHub Releases 取得最新稳定版号，请稍后再试。"
     printf '当前版本：%s\n最新稳定版：%s\n' "${current}" "${target}"
     if [[ "${current}" == "${target}" ]]; then
         printf '当前已经是最新稳定版。\n'
@@ -377,18 +428,19 @@ fi
 prompt "确认升级？[y/N]: "
 [[ "${REPLY:-}" =~ ^[Yy]$ ]] || exit 0
 
+select_image_source
+
 candidate="${compose_file}.new"
 cp -a "${compose_file}" "${candidate}"
-if [[ "${target}" != "${current}" ]]; then
-    sed -i -E "s|(rustdesk/rustdesk-server:)[^[:space:]]+|\\1${target}|g" "${candidate}"
-fi
+sed -i -E "s|(^[[:space:]]*image:[[:space:]]*)[^[:space:]]+|\\1${selected_image}:${target}|g" "${candidate}"
 
 docker compose -f "${candidate}" config >/dev/null
-docker compose -f "${candidate}" pull
 mv "${candidate}" "${compose_file}"
+printf '%s\n' "${selected_image}" >"${install_dir}/image-source.txt"
 docker compose -f "${compose_file}" up -d --remove-orphans
 
-printf '升级完成，数据和 Key 保持不变。\n'
+printf '升级完成，当前镜像：%s:%s\n' "${selected_image}" "${target}"
+printf '数据和 Key 保持不变。\n'
 UPDATE_EOF
 
     cat >/usr/local/bin/rustdesk-restart <<'RESTART_EOF'
@@ -648,7 +700,8 @@ main() {
     install_docker
     record_installed_packages
 
-    info "6/9" "生成并验证服务配置"
+    info "6/9" "选择镜像源并生成服务配置"
+    select_docker_image
     write_compose_file
 
     info "7/9" "启动 RustDesk Server"
