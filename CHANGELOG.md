@@ -2,6 +2,22 @@
 
 本项目使用 `主版本.次版本.修订号` 的版本格式。
 
+## [1.6.2] - 2026-09-02
+
+### 修复
+
+- 不再依赖 Docker Hub 标签接口获取稳定版号，避免中国大陆部分 VPS 在版本选择阶段连接超时；
+- `rustdesk-update` 不再写死 Docker Hub 镜像地址，可正确识别并更新 GHCR 或 Docker Hub 镜像。
+
+### 优化
+
+- 稳定版号改为从 RustDesk 官方 GitHub Releases 获取；
+- 安装和升级均优先拉取 RustDesk 官方 GHCR 镜像，失败时自动切换到官方 Docker Hub；
+- 使用实际 `docker pull` 验证镜像来源，两个官方来源都失败时停止操作；
+- 稳定版继续使用固定版本标签，滚动版继续使用 `latest`；
+- 记录当前使用的镜像来源到 `/opt/rustdesk/image-source.txt`；
+- 镜像拉取成功且 Compose 配置验证通过后才替换服务配置，数据库和 Key 保持不变。
+
 ## [1.6.1] - 2026-08-26
 
 ### 调整
