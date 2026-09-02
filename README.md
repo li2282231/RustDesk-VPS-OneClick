@@ -4,7 +4,7 @@
 
 **在 Ubuntu / Debian 系统的VPS 上一键部署 RustDesk Server OSS**
 
-![Version](https://img.shields.io/badge/version-1.6.1-2563eb?style=flat-square)
+![Version](https://img.shields.io/badge/version-1.6.2-2563eb?style=flat-square)
 ![Ubuntu](https://img.shields.io/badge/Ubuntu-22.04%20%7C%2024.04%20%7C%2026.04-E95420?style=flat-square&logo=ubuntu&logoColor=white)
 ![Debian](https://img.shields.io/badge/Debian-11%20%7C%2012%20%7C%2013-A81D33?style=flat-square&logo=debian&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)
@@ -40,6 +40,7 @@
 ## 功能特点
 
 - 自动识别 Ubuntu 或 Debian，并使用对应的 Docker 官方软件源；
+- 从官方 GitHub Releases 获取；优先 GHCR，失败后自动切换 Docker Hub；
 - 可选择稳定版本或滚动版 `latest`；
 - 域名和公网 IPv4 均可使用【✅推荐使用域名部署】；
 - 优先采用直连，如果你有公网IP，体验会非常不错👍；
