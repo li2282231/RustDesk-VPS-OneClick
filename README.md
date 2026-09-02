@@ -93,7 +93,7 @@ sudo -i
 执行一键安装：
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/li2282231/RustDesk-VPS-OneClick/main/install.sh)
+bash <(curl -4 -fL --retry 3 --connect-timeout 10 --max-time 60 -H 'Accept: application/vnd.github.raw+json' -H 'X-GitHub-Api-Version: 2022-11-28' 'https://api.github.com/repos/li2282231/RustDesk-VPS-OneClick/contents/install.sh?ref=main')
 ```
 
 安装时会依次询问：
