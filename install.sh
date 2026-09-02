@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# RustDesk VPS OneClick v1.6.2
+# RustDesk VPS OneClick v1.6.3
 # Supports officially maintained Ubuntu and Debian releases.
 
 set -Eeuo pipefail
 
-readonly SCRIPT_VERSION="1.6.2"
+readonly SCRIPT_VERSION="1.6.3"
 readonly INSTALL_DIR="/opt/rustdesk"
 readonly DATA_DIR="${INSTALL_DIR}/data"
 readonly COMPOSE_FILE="${INSTALL_DIR}/docker-compose.yml"
@@ -123,26 +123,76 @@ record_installed_packages() {
 install_prerequisites() {
     export DEBIAN_FRONTEND=noninteractive
     apt-get update
-    apt-get install -y ca-certificates curl iproute2
+    apt-get install -y ca-certificates curl gnupg iproute2
 }
 
 configure_docker_repository() {
     local repo_codename="${OS_CODENAME}"
+    local repo_base fingerprint
+    local expected_fingerprint="9DC858229FC7DD38854AE2D88D81803C0EBFCD88"
+    local -a repo_candidates=(
+        "https://download.docker.com/linux"
+        "https://mirrors.aliyun.com/docker-ce/linux"
+        "https://mirrors.huaweicloud.com/docker-ce/linux"
+        "https://mirrors.ustc.edu.cn/docker-ce/linux"
+    )
 
     install -m 0755 -d /etc/apt/keyrings
-    curl -4 -fsSL --retry 3 --connect-timeout 15 \
-        "https://download.docker.com/linux/${OS_ID}/gpg" \
-        -o /etc/apt/keyrings/docker.asc
-    chmod a+r /etc/apt/keyrings/docker.asc
 
-    cat >/etc/apt/sources.list.d/docker.sources <<EOF
+    for repo_base in "${repo_candidates[@]}"; do
+        rm -f -- \
+            /etc/apt/keyrings/docker.asc \
+            /etc/apt/sources.list.d/docker.sources
+        printf '正在尝试 Docker 软件源：%s/%s\n' "${repo_base}" "${OS_ID}"
+
+        if ! curl -4 -fsSL --retry 2 --retry-all-errors --retry-delay 2 \
+            --connect-timeout 10 --max-time 30 \
+            "${repo_base}/${OS_ID}/gpg" \
+            -o /etc/apt/keyrings/docker.asc; then
+            warn "无法连接 ${repo_base}/${OS_ID}，将尝试下一个软件源。"
+            continue
+        fi
+
+        fingerprint="$(
+            gpg --batch --show-keys --with-colons /etc/apt/keyrings/docker.asc 2>/dev/null \
+                | awk -F: '$1 == "fpr" {print $10; exit}'
+        )" || true
+        if [[ "${fingerprint}" != "${expected_fingerprint}" ]]; then
+            warn "${repo_base}/${OS_ID} 返回的 Docker GPG 密钥校验失败，已拒绝使用。"
+            continue
+        fi
+
+        chmod a+r /etc/apt/keyrings/docker.asc
+
+        cat >/etc/apt/sources.list.d/docker.sources <<EOF
 Types: deb
-URIs: https://download.docker.com/linux/${OS_ID}
+URIs: ${repo_base}/${OS_ID}
 Suites: ${repo_codename}
 Components: stable
 Architectures: ${ARCH}
 Signed-By: /etc/apt/keyrings/docker.asc
 EOF
+
+        if apt-get \
+            -o Dir::Etc::sourcelist=/etc/apt/sources.list.d/docker.sources \
+            -o Dir::Etc::sourceparts=- \
+            -o APT::Get::List-Cleanup=0 \
+            -o APT::Update::Error-Mode=any \
+            -o Acquire::Retries=1 \
+            -o Acquire::http::Timeout=15 \
+            -o Acquire::https::Timeout=15 \
+            update; then
+            success "Docker 软件源可用：${repo_base}/${OS_ID}"
+            return 0
+        fi
+
+        warn "${repo_base}/${OS_ID} 的软件包索引不可用，将尝试下一个软件源。"
+    done
+
+    rm -f -- \
+        /etc/apt/keyrings/docker.asc \
+        /etc/apt/sources.list.d/docker.sources
+    fail "所有可信 Docker 软件源均无法使用。请检查 VPS 的出站网络、DNS 和 TCP 443。"
 }
 
 install_docker() {
@@ -150,7 +200,6 @@ install_docker() {
         success "检测到可用的 Docker 和 Docker Compose，跳过安装。"
     else
         configure_docker_repository
-        apt-get update
         if command -v docker >/dev/null 2>&1; then
             apt-get install -y docker-compose-plugin
         else
