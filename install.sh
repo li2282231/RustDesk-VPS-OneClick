@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# RustDesk VPS OneClick v1.6.3
+# RustDesk VPS OneClick v1.6.4
 # Supports officially maintained Ubuntu and Debian releases.
 
 set -Eeuo pipefail
 
-readonly SCRIPT_VERSION="1.6.3"
+readonly SCRIPT_VERSION="1.6.4"
+readonly APT_LOCK_TIMEOUT="${APT_LOCK_TIMEOUT:-600}"
 readonly INSTALL_DIR="/opt/rustdesk"
 readonly DATA_DIR="${INSTALL_DIR}/data"
 readonly COMPOSE_FILE="${INSTALL_DIR}/docker-compose.yml"
@@ -120,15 +121,61 @@ record_installed_packages() {
     PACKAGE_TRACKING_ACTIVE="0"
 }
 
+# DPkg::Lock::Timeout handles the dpkg locks, but not every APT lists/archive
+# lock. Retry actual lock failures as well, including races after earlier steps.
+# Exit 75 means lock timeout, so callers must not mistake it for a bad mirror.
+apt_get() (
+    local log_file status remaining delay
+    [[ "${APT_LOCK_TIMEOUT}" =~ ^(0|[1-9][0-9]{0,4})$ ]] \
+        && ((APT_LOCK_TIMEOUT <= 86400)) \
+        || { warn "APT_LOCK_TIMEOUT 必须为 0 到 86400 的整数（秒）。"; return 2; }
+
+    local deadline=$((SECONDS + APT_LOCK_TIMEOUT))
+    log_file="$(mktemp "${TMPDIR:-/tmp}/rustdesk-apt.XXXXXX")" || return 1
+    trap 'rm -f -- "${log_file}"' EXIT
+
+    while :; do
+        remaining=$((deadline - SECONDS))
+        if ((remaining < 0)); then
+            remaining=0
+        fi
+
+        # Fix the locale only for APT so lock detection also works on Chinese VPSes.
+        if LC_ALL=C apt-get -o "DPkg::Lock::Timeout=${remaining}" "$@" 2>&1 | tee "${log_file}"; then
+            return 0
+        else
+            status=$?
+        fi
+
+        if ! grep -Eq 'Could not get lock |Unable to acquire (the dpkg frontend |the dpkg )?lock|Unable to lock directory ' "${log_file}"; then
+            return "${status}"
+        fi
+
+        remaining=$((deadline - SECONDS))
+        if ((remaining <= 0)); then
+            warn "等待 APT/dpkg 锁释放已超时（${APT_LOCK_TIMEOUT} 秒）。请等待系统自动更新完成后重新运行；不要删除锁文件或强制终止更新进程。"
+            warn "可运行 systemctl status apt-daily.service apt-daily-upgrade.service unattended-upgrades.service 查看更新状态。"
+            return 75
+        fi
+
+        warn "APT/dpkg 正被其他进程使用，将等待后重试（剩余 ${remaining} 秒）。"
+        delay=5
+        if ((remaining < delay)); then
+            delay="${remaining}"
+        fi
+        sleep "${delay}"
+    done
+)
+
 install_prerequisites() {
     export DEBIAN_FRONTEND=noninteractive
-    apt-get update
-    apt-get install -y ca-certificates curl gnupg iproute2
+    apt_get update
+    apt_get install -y ca-certificates curl gnupg iproute2
 }
 
 configure_docker_repository() {
     local repo_codename="${OS_CODENAME}"
-    local repo_base fingerprint
+    local repo_base fingerprint apt_status
     local expected_fingerprint="9DC858229FC7DD38854AE2D88D81803C0EBFCD88"
     local -a repo_candidates=(
         "https://download.docker.com/linux"
@@ -173,7 +220,7 @@ Architectures: ${ARCH}
 Signed-By: /etc/apt/keyrings/docker.asc
 EOF
 
-        if apt-get \
+        if apt_get \
             -o Dir::Etc::sourcelist=/etc/apt/sources.list.d/docker.sources \
             -o Dir::Etc::sourceparts=- \
             -o APT::Get::List-Cleanup=0 \
@@ -184,8 +231,14 @@ EOF
             update; then
             success "Docker 软件源可用：${repo_base}/${OS_ID}"
             return 0
+        else
+            apt_status=$?
         fi
 
+        # A busy package manager says nothing about this mirror's availability.
+        if [[ "${apt_status}" -eq 75 || "${apt_status}" -eq 2 ]]; then
+            return "${apt_status}"
+        fi
         warn "${repo_base}/${OS_ID} 的软件包索引不可用，将尝试下一个软件源。"
     done
 
@@ -201,9 +254,9 @@ install_docker() {
     else
         configure_docker_repository
         if command -v docker >/dev/null 2>&1; then
-            apt-get install -y docker-compose-plugin
+            apt_get install -y docker-compose-plugin
         else
-            apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+            apt_get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
         fi
     fi
 
@@ -764,4 +817,6 @@ main() {
     show_result
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    main "$@"
+fi
