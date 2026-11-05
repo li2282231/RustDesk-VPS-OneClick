@@ -1,0 +1,28 @@
+name: Installer checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04, ubuntu-26.04]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Bash syntax
+        run: bash -n install.sh
+      - name: ShellCheck errors
+        run: shellcheck --severity=error install.sh
+      - name: APT lock regression tests
+        run: python3 -m unittest discover -s tests -v
