@@ -35,7 +35,7 @@
 
 - `hbbs`：ID 注册、在线状态与连接协调服务；
 - `hbbr`：无法建立直连时使用的中继服务；
-- Docker Compose：负责容器启动、重启与版本升级；
+- `Docker Compose`：负责容器启动、重启与版本升级；
 - `data` 目录：持久保存数据库和服务器密钥。
 
 ## 功能特点
@@ -92,7 +92,7 @@
 sudo -i
 ```
 
-下载成功后执行安装：
+复制下面的一键安装命令执行安装：
 
 ```bash
 curl -4 -fL --retry 3 --connect-timeout 10 --max-time 60 \
@@ -107,26 +107,6 @@ curl -4 -fL --retry 3 --connect-timeout 10 --max-time 60 \
 1. 选择稳定版或滚动版 `latest`，建议直接按回车选稳定版；
 2. 输入 RustDesk 域名或 VPS 公网 IPv4；
 3. 等待 Docker 和 RustDesk Server 部署完成。
-
-系统还原后，`unattended-upgrades` 可能在后台自动更新，安装器会等待 APT/dpkg 锁释放后继续。需要更长等待时间时，可在下载脚本后执行：
-
-```bash
-APT_LOCK_TIMEOUT=1800 bash /tmp/rustdesk-install.sh
-```
-
-`APT_LOCK_TIMEOUT` 的单位为秒，允许 0–86400；0 表示不等待。该值限制每次 APT 调用等待锁的时间，不限制正常下载或安装软件包的时间。
-
-## 重置 VPS 后的干净系统复测
-
-1. 在云厂商控制台重装受支持的系统；复现本次问题可选择 Ubuntu 22.04。重装会清除原来的 RustDesk 数据与 Key。
-2. SSH 登录并执行 `sudo -i`。若镜像带有 cloud-init，先运行 `cloud-init status --wait`，等待初始化完成；该命令仅用于登录后的手动复测。
-3. 确认域名解析到重装后的公网 IP，并在云安全组放行前述端口。
-4. 执行上方安装命令，确认开头显示 `RustDesk VPS OneClick v1.6.4`，选择稳定版并输入域名或公网 IP。
-5. 如果系统自动更新占锁，等待安装器继续；不删除锁文件、不杀更新进程。官方 Docker 源不可达时，脚本仍会验证签名并自动尝试镜像源。
-6. 完成后运行 `rustdesk-status`：确认 Docker 为 active、`hbbs`/`hbbr` 正常运行、所需端口已监听且 Key 已生成；再运行 `rustdesk-logs` 检查服务日志。
-7. 把此次生成的 Key 更新到两端 RustDesk 客户端，先测试普通连接，再测试强制中继连接。最后重启 VPS，再次检查 `rustdesk-status` 和客户端连接。
-
-仓库自动测试覆盖锁释放、锁超时、安装中途占锁、源切换和已有 Docker 等情况；Linux 测试还使用独立临时目录中的真实 APT 与 POSIX 文件锁，不改动测试机软件包。实际 VPS 的镜像下载、云安全组及客户端连通性仍需按以上步骤验收。
 
 ## 配置 RustDesk 客户端
 
