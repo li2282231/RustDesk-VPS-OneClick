@@ -4,7 +4,7 @@
 
 **在 Ubuntu / Debian 系统的VPS 上一键部署 RustDesk Server OSS**
 
-![Version](https://img.shields.io/badge/version-1.6.3-2563eb?style=flat-square)
+![Version](https://img.shields.io/badge/version-1.6.4-2563eb?style=flat-square)
 ![Ubuntu](https://img.shields.io/badge/Ubuntu-22.04%20%7C%2024.04%20%7C%2026.04-E95420?style=flat-square&logo=ubuntu&logoColor=white)
 ![Debian](https://img.shields.io/badge/Debian-11%20%7C%2012%20%7C%2013-A81D33?style=flat-square&logo=debian&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)
@@ -20,6 +20,7 @@
 - [适用系统](#适用系统)
 - [安装前准备](#安装前准备)
 - [一键安装](#一键安装)
+- [重置 VPS 后的干净系统复测](#重置-vps-后的干净系统复测)
 - [配置 RustDesk 客户端](#配置-rustdesk-客户端)
 - [管理命令](#管理命令)
 - [升级与维护](#升级与维护)
@@ -40,6 +41,7 @@
 ## 功能特点
 
 - 自动识别 Ubuntu 或 Debian，并使用对应的 Docker 官方软件源；
+- 所有安装阶段的 APT 操作都会等待系统自动更新释放锁，默认每次最多等待 600 秒；
 - 从官方 GitHub Releases 获取；优先 GHCR，失败后自动切换 Docker Hub；
 - 可选择稳定版本或滚动版 `latest`；
 - 域名和公网 IPv4 均可使用【✅推荐使用域名部署】；
@@ -51,7 +53,7 @@
 - 记录首次安装时新增的软件包，便于卸载时一并清理；
 - 提供状态、升级、重启、日志和完整卸载命令；
 - 完整卸载可删除 RustDesk、Docker、全部 Docker 数据及相关依赖；
-- GitHub Actions 自动检查脚本语法。
+- GitHub Actions 在 Ubuntu 22.04 / 24.04 / 26.04 上检查语法、ShellCheck 和 APT 锁回归测试。
 
 ## 适用系统
 
@@ -90,10 +92,14 @@
 sudo -i
 ```
 
-执行一键安装：
+下载成功后执行安装：
 
 ```bash
-bash <(curl -4 -fL --retry 3 --connect-timeout 10 --max-time 60 -H 'Accept: application/vnd.github.raw+json' -H 'X-GitHub-Api-Version: 2022-11-28' 'https://api.github.com/repos/li2282231/RustDesk-VPS-OneClick/contents/install.sh?ref=main')
+curl -4 -fL --retry 3 --connect-timeout 10 --max-time 60 \
+  -H 'Accept: application/vnd.github.raw+json' \
+  -H 'X-GitHub-Api-Version: 2022-11-28' \
+  'https://api.github.com/repos/li2282231/RustDesk-VPS-OneClick/contents/install.sh?ref=main' \
+  -o /tmp/rustdesk-install.sh && bash /tmp/rustdesk-install.sh
 ```
 
 安装时会依次询问：
@@ -101,6 +107,26 @@ bash <(curl -4 -fL --retry 3 --connect-timeout 10 --max-time 60 -H 'Accept: appl
 1. 选择稳定版或滚动版 `latest`，建议直接按回车选稳定版；
 2. 输入 RustDesk 域名或 VPS 公网 IPv4；
 3. 等待 Docker 和 RustDesk Server 部署完成。
+
+系统还原后，`unattended-upgrades` 可能在后台自动更新，安装器会等待 APT/dpkg 锁释放后继续。需要更长等待时间时，可在下载脚本后执行：
+
+```bash
+APT_LOCK_TIMEOUT=1800 bash /tmp/rustdesk-install.sh
+```
+
+`APT_LOCK_TIMEOUT` 的单位为秒，允许 0–86400；0 表示不等待。该值限制每次 APT 调用等待锁的时间，不限制正常下载或安装软件包的时间。
+
+## 重置 VPS 后的干净系统复测
+
+1. 在云厂商控制台重装受支持的系统；复现本次问题可选择 Ubuntu 22.04。重装会清除原来的 RustDesk 数据与 Key。
+2. SSH 登录并执行 `sudo -i`。若镜像带有 cloud-init，先运行 `cloud-init status --wait`，等待初始化完成；该命令仅用于登录后的手动复测。
+3. 确认域名解析到重装后的公网 IP，并在云安全组放行前述端口。
+4. 执行上方安装命令，确认开头显示 `RustDesk VPS OneClick v1.6.4`，选择稳定版并输入域名或公网 IP。
+5. 如果系统自动更新占锁，等待安装器继续；不删除锁文件、不杀更新进程。官方 Docker 源不可达时，脚本仍会验证签名并自动尝试镜像源。
+6. 完成后运行 `rustdesk-status`：确认 Docker 为 active、`hbbs`/`hbbr` 正常运行、所需端口已监听且 Key 已生成；再运行 `rustdesk-logs` 检查服务日志。
+7. 把此次生成的 Key 更新到两端 RustDesk 客户端，先测试普通连接，再测试强制中继连接。最后重启 VPS，再次检查 `rustdesk-status` 和客户端连接。
+
+仓库自动测试覆盖锁释放、锁超时、安装中途占锁、源切换和已有 Docker 等情况；Linux 测试还使用独立临时目录中的真实 APT 与 POSIX 文件锁，不改动测试机软件包。实际 VPS 的镜像下载、云安全组及客户端连通性仍需按以上步骤验收。
 
 ## 配置 RustDesk 客户端
 
@@ -205,6 +231,23 @@ rustdesk-uninstall
 VPS 服务商控制台中的安全组/云防火墙不属于系统内部配置，脚本无法替你删除；完整卸载后需要回到服务商控制台手动撤销此前放行的 RustDesk 端口。
 
 ## 常见问题
+
+### 重装后出现 dpkg/lock-frontend，被 unattended-upgr 占用
+
+这是后台自动更新与安装器同时使用软件包管理器造成的。v1.6.4 起，基础依赖、Docker 源索引更新和 Docker 安装都通过统一的锁等待处理；锁释放后自动继续，超时后提示重新运行。锁超时不会被当成 Docker 源故障而反复切换软件源。
+
+等待超时后可查看：
+
+```bash
+systemctl status apt-daily.service apt-daily-upgrade.service unattended-upgrades.service
+tail -n 80 /var/log/unattended-upgrades/unattended-upgrades.log
+```
+
+等待更新完成后重新执行安装命令即可；不要删除 `/var/lib/dpkg/lock*` 或强制杀死正在安装软件包的进程。
+
+### Docker 官方源提示 Could not handshake
+
+这表示 VPS 与 Docker 官方 HTTPS 源的连接失败，仅凭这条日志无法确定具体网络原因。脚本会继续尝试阿里云、华为云和中科大镜像源，并校验 Docker GPG 密钥指纹与 APT 签名。若随后显示某个源可用，说明源切换成功；后续的锁错误需要按上一项处理。
 
 ### 安装成功，但客户端连不上
 
